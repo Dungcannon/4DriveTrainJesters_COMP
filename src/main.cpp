@@ -1,3 +1,21 @@
+/* PORT USAGE
+leftMotorA          1
+leftMotorB          2
+rightMotorA         3
+rightMotorB         4
+*LeftDriveSmart     1,2
+*RightDriveSmart    3,4
+DrivetrainInertial  5
+*Drivetrain         1,2, 3,4, 5
+Collector           6
+DoubleReverseMotorA 9
+DoubleReverseMotorB 10
+*DoubleReverse      9,10
+ThreeWirePort       22
+SolenoidA           A
+SolenoidB           B
+*/
+
 #include <math.h>
 #include "vex.h"
 
@@ -18,7 +36,9 @@ smartdrive Drivetrain = smartdrive(LeftDriveSmart, RightDriveSmart, DrivetrainIn
 controller Controller1 = controller(primary);
 motor Collector = motor(PORT6, ratio18_1, false);
 
-digital_out Solenoid = digital_out(Brain.ThreeWirePort.A);
+triport ThreeWirePort = triport(PORT22);
+digital_out SolenoidA = digital_out(ThreeWirePort.A);
+digital_out SolenoidB = digital_out(ThreeWirePort.B);
 motor Catapult = motor(PORT7, ratio18_1, false);
 
 motor DoubleReverseMotorA = motor(PORT8, ratio36_1, false);
@@ -49,6 +69,9 @@ bool DrivetrainLNeedsToBeStopped_Controller1 = true;
 bool DrivetrainRNeedsToBeStopped_Controller1 = true;
 
 bool DrivetrainToggle = false;
+bool SolenoidToggle = false;
+bool solToggleL = false;
+bool solToggleR = false;
 
 
 competition Competition;
@@ -81,6 +104,11 @@ void TriggerHappy(int timems)
   return;
 }
 
+void DoubleSolenoid(bool isExtended){
+  SolenoidA = isExtended;
+  SolenoidB = isExtended;
+  wait(50, msec);
+}
 
 
 /* - PREAUTON / AUTON / COMP - */
@@ -92,7 +120,7 @@ void pre_auton(void) {
   Catapult.setVelocity(100, percent); // catapult shoot speed
   Catapult.setMaxTorque(100, percent); // catapult torque
   Catapult.setStopping(hold);
-  Solenoid.set(false); 
+  DoubleSolenoid(false);
 }
 
 void autonomous(void) {
@@ -183,7 +211,7 @@ void usercontrol(void) {
         // set the toggle so that we don't constantly tell the motor to stop when the buttons are released
         Controller1RightShoulderControlMotorsStopped = true;
       }
-      // check the ButtonX/ButtonB status to control DoubleReverse
+      // check the ButtonY/ButtonA status to control DoubleReverse
       if (Controller1.ButtonY.pressing()) {
         DoubleReverse.spin(forward);
         Controller1YAButtonsControlMotorsStopped = false;
@@ -195,7 +223,7 @@ void usercontrol(void) {
         // set the toggle so that we don't constantly tell the motor to stop when the buttons are released
         Controller1YAButtonsControlMotorsStopped = true;
       }
-
+      // Toggles the drivetrain to be either coast or hold
       if (Controller1.ButtonUp.pressing()){
         if (DrivetrainToggle = false){
           LockIt();
@@ -204,6 +232,39 @@ void usercontrol(void) {
         else if (DrivetrainToggle = true){
           UnlockIt();
           DrivetrainToggle = false;
+        }
+      }
+      
+      // Toggles the bottom button to toggle both solenoid sides.
+      if (Controller1.ButtonDown.pressing()){
+       if (SolenoidToggle = false){
+          DoubleSolenoid(true);
+          SolenoidToggle = true;
+        }
+        else if (SolenoidToggle = true){
+          DoubleSolenoid(false);
+          SolenoidToggle = false;
+        }
+      }
+      // Left Solenoid Toggle
+      if (Controller1.ButtonLeft.pressing()){
+         if (solToggleL = false){
+          SolenoidA.set(true);
+          solToggleL = true;
+        }
+        else if (solToggleL = true){
+          SolenoidA.set(false);
+          solToggleL = false;
+        }
+      }
+      if (Controller1.ButtonRight.pressing()){
+        if (solToggleR = false){
+          SolenoidB.set(true);
+          solToggleR = true;
+        }
+        else if (solToggleR = true){
+          SolenoidB.set(false);
+          solToggleR = false;
         }
       }
 
