@@ -45,6 +45,9 @@ motor DoubleReverseMotorA = motor(PORT8, ratio36_1, false);
 motor DoubleReverseMotorB = motor(PORT9, ratio36_1, false);
 motor_group DoubleReverse = motor_group(DoubleReverseMotorA, DoubleReverseMotorB);
 
+digital_in HomeJumper = digital_in(ThreeWirePort.G);
+digital_in EnemyJumper = digital_in(ThreeWirePort.H);
+
 
 void calibrateDrivetrain() {
   wait(200, msec);
@@ -112,6 +115,19 @@ void DoubleSolenoid(bool isExtended){
 
 
 /* - PREAUTON / AUTON / COMP - */
+void EnemySideStart(){ // When Jumper is on port H, run this code
+  Drivetrain.setHeading(0, degrees);
+  Drivetrain.driveFor(3, inches);
+  Drivetrain.turnToHeading(90, degrees);
+  Drivetrain.driveFor(24, inches);
+
+}
+void HomeSideStart(){ // When Jumper is on port G, run this code
+  Drivetrain.setHeading(0, degrees);
+  Drivetrain.driveFor(3, inches);
+  Drivetrain.turnToHeading(270, degrees);
+  Drivetrain.driveFor(24, inches);
+}
 
 
 
@@ -125,19 +141,31 @@ void pre_auton(void) {
 
 void autonomous(void) {
   Drivetrain.setDriveVelocity(200, rpm);
-  Drivetrain.drive(forward);
-  wait(1.5, seconds);
-  Drivetrain.stop();
-  Drivetrain.drive(reverse);
-  wait(400, msec);
-  Drivetrain.stop();
-  Drivetrain.drive(forward);
-  wait(600, msec);
-  Drivetrain.stop();
+  if(EnemyJumper.value() == 0){
+    Brain.Screen.print("This is on port H, ENEMY SIDE");
+    EnemySideStart();
+  }
+  else if (HomeJumper.value() == 0){
+    Brain.Screen.print("This is on Port G, HOME SIDE");
+    HomeSideStart();
+  }
+  else {
+    Brain.Screen.print("This is the Fallback, you've done something wrong.");
+    Drivetrain.setDriveVelocity(200, rpm);
+    Drivetrain.drive(forward);
+    wait(1.5, seconds);
+    Drivetrain.stop();
+    Drivetrain.drive(reverse);
+    wait(400, msec);
+    Drivetrain.stop();
+    Drivetrain.drive(forward);
+    wait(600, msec);
+    Drivetrain.stop();
 
-  Drivetrain.drive(reverse);
-  wait(500, msec);
-  Drivetrain.stop();
+    Drivetrain.drive(reverse);
+    wait(500, msec);
+    Drivetrain.stop(); 
+  }
 }
 
 void usercontrol(void) {
@@ -225,11 +253,11 @@ void usercontrol(void) {
       }
       // Toggles the drivetrain to be either coast or hold
       if (Controller1.ButtonUp.pressing()){
-        if (DrivetrainToggle = false){
+        if (DrivetrainToggle == false){
           LockIt();
           DrivetrainToggle = true;
         }
-        else if (DrivetrainToggle = true){
+        else if (DrivetrainToggle == true){
           UnlockIt();
           DrivetrainToggle = false;
         }
@@ -237,32 +265,32 @@ void usercontrol(void) {
       
       // Toggles the bottom button to toggle both solenoid sides.
       if (Controller1.ButtonDown.pressing()){
-       if (SolenoidToggle = false){
+       if (SolenoidToggle == false){
           DoubleSolenoid(true);
           SolenoidToggle = true;
         }
-        else if (SolenoidToggle = true){
+        else if (SolenoidToggle == true){
           DoubleSolenoid(false);
           SolenoidToggle = false;
         }
       }
       // Left Solenoid Toggle
       if (Controller1.ButtonLeft.pressing()){
-         if (solToggleL = false){
+         if (solToggleL == false){
           SolenoidA.set(true);
           solToggleL = true;
         }
-        else if (solToggleL = true){
+        else if (solToggleL == true){
           SolenoidA.set(false);
           solToggleL = false;
         }
       }
       if (Controller1.ButtonRight.pressing()){
-        if (solToggleR = false){
+        if (solToggleR == false){
           SolenoidB.set(true);
           solToggleR = true;
         }
-        else if (solToggleR = true){
+        else if (solToggleR == true){
           SolenoidB.set(false);
           solToggleR = false;
         }
