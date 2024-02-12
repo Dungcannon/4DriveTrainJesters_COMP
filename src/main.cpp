@@ -8,6 +8,7 @@ rightMotorB         4
 DrivetrainInertial  5
 *Drivetrain         1,2, 3,4, 5
 Collector           6
+Catapult            8
 DoubleReverseMotorA 9
 DoubleReverseMotorB 10
 *DoubleReverse      9,10
@@ -39,7 +40,7 @@ motor Collector = motor(PORT6, ratio18_1, false);
 triport ThreeWirePort = triport(PORT22);
 digital_out SolenoidA = digital_out(ThreeWirePort.A);
 digital_out SolenoidB = digital_out(ThreeWirePort.B);
-motor Catapult = motor(PORT7, ratio18_1, false);
+motor Catapult = motor(PORT8, ratio18_1, false);
 
 motor DoubleReverseMotorA = motor(PORT8, ratio36_1, false);
 motor DoubleReverseMotorB = motor(PORT9, ratio36_1, false);
@@ -108,33 +109,76 @@ void TriggerHappy(int timems)
 }
 
 void DoubleSolenoid(bool isExtended){
-  SolenoidA = isExtended;
-  SolenoidB = isExtended;
+  SolenoidA.set(isExtended);
+  SolenoidB.set(isExtended);
   wait(50, msec);
 }
 
 
 /* - PREAUTON / AUTON / COMP - */
+// NUMBERS AS PLACEHOLDER
 void EnemySideStart(){ // When Jumper is on port H, run this code
-  Drivetrain.setHeading(0, degrees);
-  Drivetrain.driveFor(3, inches);
-  Drivetrain.turnToHeading(90, degrees);
-  Drivetrain.driveFor(24, inches);
+  Collector.spin(reverse); // Take in Load Triball
+  Drivetrain.setDriveVelocity(200, percent);
+  Drivetrain.setTurnVelocity(200, percent);
 
-}
-void HomeSideStart(){ // When Jumper is on port G, run this code
-  Drivetrain.setHeading(0, degrees);
-  Drivetrain.driveFor(3, inches);
+  Drivetrain.setHeading(0, degrees); // Set heading
+  Drivetrain.driveFor(-3, inches); // Calibration
+  Drivetrain.turnToHeading(75, degrees); // Move to enemy goal
+  Drivetrain.driveFor(-24, inches);
+  Collector.spin(forward);
+
+  Drivetrain.driveFor(1, inches);
+  Drivetrain.turnToHeading(5, degrees);
+  Drivetrain.driveFor(-15, inches);
   Drivetrain.turnToHeading(270, degrees);
-  Drivetrain.driveFor(24, inches);
+  DoubleSolenoid(true);
+  Drivetrain.driveFor(10, inches);
+  Drivetrain.turnToHeading(0, degrees);
+  Drivetrain.drive(forward);
+}
+
+
+// NUMBERS AS PLACEHOLDER
+void HomeSideStart(){ // When Jumper is on port G, run this code
+  Collector.spin(reverse); // Take in Load
+  Drivetrain.setDriveVelocity(200, percent);
+  Drivetrain.setTurnVelocity(200, percent);
+
+  Drivetrain.setHeading(0, degrees); // Set heading
+  Drivetrain.driveFor(-3, inches); // Calibrate 
+  Drivetrain.turnToHeading(310, degrees); // Turn to Home Goal
+  Collector.spin(forward); // maybe put spin after driveFor?
+  Drivetrain.driveFor(-24, inches); // Move to goal
+
+  Drivetrain.driveFor(24, inches); // go to load zone
+  Drivetrain.turnToHeading(15, degrees); // move to ball
+  Collector.spin(reverse);
+  Drivetrain.driveFor(-2, inches); // take ball
+  Drivetrain.driveFor(2, inches);
+  Drivetrain.turnToHeading(300, degrees); // move to home goal
+  Collector.spin(forward);
+  Drivetrain.driveFor(-24, inches);
+
+  Drivetrain.driveFor(1, inches); // get out of goal
+  Drivetrain.turnToHeading(0, degrees); // go up
+  Drivetrain.driveFor(20, inches);
+  Drivetrain.turnToHeading(90, degrees); // go to mid
+  DoubleSolenoid(true);
+  Drivetrain.driveFor(10, inches); 
+  Drivetrain.turnToHeading(180, degrees); // Push triballs to goal
+  Drivetrain.drive(forward);
+
+  // After this, try and go to hang zone.
 }
 
 
 
 void pre_auton(void) {
   calibrateDrivetrain();
-  Catapult.setVelocity(100, percent); // catapult shoot speed
+  Catapult.setVelocity(75, percent); // catapult shoot speed
   Catapult.setMaxTorque(100, percent); // catapult torque
+  Collector.setVelocity(100, percent);
   Catapult.setStopping(hold);
   DoubleSolenoid(false);
 }
@@ -150,7 +194,7 @@ void autonomous(void) {
     HomeSideStart();
   }
   else {
-    Brain.Screen.print("This is the Fallback, you've done something wrong.");
+    Brain.Screen.print("ERROR: Jumper not detected. Using Fallback code.");
     Drivetrain.setDriveVelocity(200, rpm);
     Drivetrain.drive(forward);
     wait(1.5, seconds);
