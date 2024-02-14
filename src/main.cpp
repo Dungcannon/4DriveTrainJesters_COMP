@@ -111,7 +111,7 @@ void TriggerHappy(int timems)
 void DoubleSolenoid(bool isExtended){
   SolenoidA.set(isExtended);
   SolenoidB.set(isExtended);
-  wait(50, msec);
+  wait(100, msec);
 }
 
 
@@ -312,31 +312,41 @@ void usercontrol(void) {
        if (SolenoidToggle == false){
           DoubleSolenoid(true);
           SolenoidToggle = true;
+          solToggleL = true;
+          solToggleR = true;
         }
         else if (SolenoidToggle == true){
           DoubleSolenoid(false);
           SolenoidToggle = false;
+          solToggleL = false;
+          solToggleR = false;
         }
       }
+
       // Left Solenoid Toggle
       if (Controller1.ButtonLeft.pressing()){
          if (solToggleL == false){
           SolenoidA.set(true);
           solToggleL = true;
+          wait(100, msec);
         }
         else if (solToggleL == true){
           SolenoidA.set(false);
           solToggleL = false;
+          wait(100, msec);
         }
       }
+
       if (Controller1.ButtonRight.pressing()){
         if (solToggleR == false){
           SolenoidB.set(true);
           solToggleR = true;
+          wait(100, msec);
         }
         else if (solToggleR == true){
           SolenoidB.set(false);
           solToggleR = false;
+          wait(100, msec);
         }
       }
 
