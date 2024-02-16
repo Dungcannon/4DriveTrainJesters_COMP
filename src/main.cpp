@@ -32,7 +32,7 @@ motor rightMotorA = motor(PORT3, ratio18_1, false);
 motor rightMotorB = motor(PORT4, ratio18_1, false);
 motor_group RightDriveSmart = motor_group(rightMotorA, rightMotorB);
 inertial DrivetrainInertial = inertial(PORT5);
-smartdrive Drivetrain = smartdrive(LeftDriveSmart, RightDriveSmart, DrivetrainInertial, 320, 320, 40, mm, 1);
+smartdrive Drivetrain = smartdrive(RightDriveSmart, LeftDriveSmart, DrivetrainInertial, 319.19, 320, 40, mm, 1);
 
 controller Controller1 = controller(primary);
 motor Collector = motor(PORT6, ratio18_1, false);
@@ -57,7 +57,7 @@ void calibrateDrivetrain() {
   Brain.Screen.print("Inertial");
   DrivetrainInertial.calibrate();
   while (DrivetrainInertial.isCalibrating()) {
-    wait(25, msec);
+    wait(100, msec);
   }
 
   // Clears the screen and returns the cursor to row 1, column 1.
@@ -76,6 +76,7 @@ bool DrivetrainToggle = false;
 bool SolenoidToggle = false;
 bool solToggleL = false;
 bool solToggleR = false;
+bool isJoystickSwapped = false;
 
 
 competition Competition;
@@ -116,60 +117,43 @@ void DoubleSolenoid(bool isExtended){
 
 
 /* - PREAUTON / AUTON / COMP - */
-// NUMBERS AS PLACEHOLDER
 void EnemySideStart(){ // When Jumper is on port H, run this code
+  DrivetrainInertial.calibrate();
+  Drivetrain.setHeading(0, degrees);
   Collector.spin(reverse); // Take in Load Triball
-  Drivetrain.setDriveVelocity(200, percent);
-  Drivetrain.setTurnVelocity(200, percent);
-
-  Drivetrain.setHeading(0, degrees); // Set heading
-  Drivetrain.driveFor(-3, inches); // Calibration
-  Drivetrain.turnToHeading(75, degrees); // Move to enemy goal
-  Drivetrain.driveFor(-24, inches);
+  Drivetrain.driveFor(-60, inches);
+  Drivetrain.turnToHeading(269, degrees);
+  Drivetrain.driveFor(-6, inches);
+  Drivetrain.driveFor(6, inches);
+  Drivetrain.turnToHeading(90, degrees);
   Collector.spin(forward);
-
-  Drivetrain.driveFor(1, inches);
-  Drivetrain.turnToHeading(5, degrees);
-  Drivetrain.driveFor(-15, inches);
-  Drivetrain.turnToHeading(270, degrees);
   DoubleSolenoid(true);
-  Drivetrain.driveFor(10, inches);
-  Drivetrain.turnToHeading(0, degrees);
-  Drivetrain.drive(forward);
+
+  Drivetrain.drive(reverse);
+  wait(1.5, seconds);
+  Drivetrain.stop();
+  
+  Drivetrain.turnToHeading(42, degrees);
+  Drivetrain.driveFor(69, inches);
+  Drivetrain.turnToHeading(90, degrees);
+  Drivetrain.driveFor(-15, inches);
 }
 
 
 // NUMBERS AS PLACEHOLDER
 void HomeSideStart(){ // When Jumper is on port G, run this code
-  Collector.spin(reverse); // Take in Load
-  Drivetrain.setDriveVelocity(200, percent);
-  Drivetrain.setTurnVelocity(200, percent);
-
-  Drivetrain.setHeading(0, degrees); // Set heading
-  Drivetrain.driveFor(-3, inches); // Calibrate 
-  Drivetrain.turnToHeading(310, degrees); // Turn to Home Goal
-  Collector.spin(forward); // maybe put spin after driveFor?
-  Drivetrain.driveFor(-24, inches); // Move to goal
-
-  Drivetrain.driveFor(24, inches); // go to load zone
-  Drivetrain.turnToHeading(15, degrees); // move to ball
+  DrivetrainInertial.calibrate();
+  Drivetrain.setHeading(0, degrees);
   Collector.spin(reverse);
-  Drivetrain.driveFor(-2, inches); // take ball
-  Drivetrain.driveFor(2, inches);
-  Drivetrain.turnToHeading(300, degrees); // move to home goal
-  Collector.spin(forward);
-  Drivetrain.driveFor(-24, inches);
+  Drivetrain.turnToHeading(15, degrees);
+  Drivetrain.driveFor(-15, inches);
+  Drivetrain.driveFor(10, inches);
+  Drivetrain.turnToHeading(15, degrees);
+  Drivetrain.driveFor(10, inches);
+  SolenoidB.set(true);
+  Drivetrain.turnToHeading(0, degrees);
+  Drivetrain.driveFor(15, inches);
 
-  Drivetrain.driveFor(1, inches); // get out of goal
-  Drivetrain.turnToHeading(0, degrees); // go up
-  Drivetrain.driveFor(20, inches);
-  Drivetrain.turnToHeading(90, degrees); // go to mid
-  DoubleSolenoid(true);
-  Drivetrain.driveFor(10, inches); 
-  Drivetrain.turnToHeading(180, degrees); // Push triballs to goal
-  Drivetrain.drive(forward);
-
-  // After this, try and go to hang zone.
 }
 
 
@@ -195,7 +179,9 @@ void autonomous(void) {
   }
   else {
     Brain.Screen.print("ERROR: Jumper not detected. Using Fallback code.");
+    DrivetrainInertial.calibrate();
     Drivetrain.setDriveVelocity(200, rpm);
+    Drivetrain.setHeading(0, degrees);
     Drivetrain.drive(forward);
     wait(1.5, seconds);
     Drivetrain.stop();
@@ -209,6 +195,8 @@ void autonomous(void) {
     Drivetrain.drive(reverse);
     wait(500, msec);
     Drivetrain.stop(); 
+
+    Drivetrain.turnToHeading(180, degrees);
   }
 }
 
@@ -350,6 +338,18 @@ void usercontrol(void) {
         }
       }
 
+      if (Controller1.ButtonX.pressing()){
+        if (isJoystickSwapped == false){
+          isJoystickSwapped = true;
+        }
+        else if (isJoystickSwapped == true){
+          isJoystickSwapped = false;
+        }
+      }
+
+      if (Controller1.ButtonA.pressing()){
+        Catapult.spinTo(-540, degrees);
+      }
           wait(20, msec);
                     
     }
