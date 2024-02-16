@@ -42,8 +42,8 @@ digital_out SolenoidA = digital_out(ThreeWirePort.A);
 digital_out SolenoidB = digital_out(ThreeWirePort.B);
 motor Catapult = motor(PORT8, ratio18_1, false);
 
-motor DoubleReverseMotorA = motor(PORT8, ratio36_1, false);
-motor DoubleReverseMotorB = motor(PORT9, ratio36_1, false);
+motor DoubleReverseMotorA = motor(PORT9, ratio36_1, false);
+motor DoubleReverseMotorB = motor(PORT10, ratio36_1, false);
 motor_group DoubleReverse = motor_group(DoubleReverseMotorA, DoubleReverseMotorB);
 
 digital_in HomeJumper = digital_in(ThreeWirePort.G);
@@ -121,22 +121,25 @@ void EnemySideStart(){ // When Jumper is on port H, run this code
   DrivetrainInertial.calibrate();
   Drivetrain.setHeading(0, degrees);
   Collector.spin(reverse); // Take in Load Triball
+
   Drivetrain.driveFor(-60, inches);
   Drivetrain.turnToHeading(269, degrees);
-  Drivetrain.driveFor(-6, inches);
-  Drivetrain.driveFor(6, inches);
+  Drivetrain.driveFor(-8, inches);
+  Drivetrain.driveFor(7, inches);
   Drivetrain.turnToHeading(90, degrees);
   Collector.spin(forward);
   DoubleSolenoid(true);
 
   Drivetrain.drive(reverse);
-  wait(1.5, seconds);
+  wait(0.9, seconds);
   Drivetrain.stop();
+  DoubleSolenoid(false);
   
-  Drivetrain.turnToHeading(42, degrees);
+  Drivetrain.turnToHeading(45, degrees);
   Drivetrain.driveFor(69, inches);
+
   Drivetrain.turnToHeading(90, degrees);
-  Drivetrain.driveFor(-15, inches);
+  Drivetrain.driveFor(-30, inches);
 }
 
 
@@ -145,15 +148,22 @@ void HomeSideStart(){ // When Jumper is on port G, run this code
   DrivetrainInertial.calibrate();
   Drivetrain.setHeading(0, degrees);
   Collector.spin(reverse);
-  Drivetrain.turnToHeading(15, degrees);
-  Drivetrain.driveFor(-15, inches);
-  Drivetrain.driveFor(10, inches);
-  Drivetrain.turnToHeading(15, degrees);
-  Drivetrain.driveFor(10, inches);
-  SolenoidB.set(true);
-  Drivetrain.turnToHeading(0, degrees);
-  Drivetrain.driveFor(15, inches);
 
+  Drivetrain.driveFor(-59, inches);
+  Drivetrain.turnToHeading(85, degrees);
+  Drivetrain.driveFor(-8, inches);
+  Drivetrain.driveFor(7, inches);
+
+  Drivetrain.turnToHeading(270, degrees);
+  Collector.spin(reverse);
+
+  Drivetrain.driveFor(-8, inches);
+  Drivetrain.turnToHeading(90, degrees);
+  Drivetrain.driveFor(-15, inches);
+  Drivetrain.driveFor(9, inches);
+
+  Drivetrain.turnToHeading(0, degrees);
+  Drivetrain.driveFor(59, inches);
 }
 
 
@@ -174,6 +184,7 @@ void autonomous(void) {
     EnemySideStart();
   }
   else if (HomeJumper.value() == 0){
+    Drivetrain.setDriveVelocity(200, rpm);
     Brain.Screen.print("This is on Port G, HOME SIDE");
     HomeSideStart();
   }
@@ -302,12 +313,14 @@ void usercontrol(void) {
           SolenoidToggle = true;
           solToggleL = true;
           solToggleR = true;
+          wait(500, msec);
         }
         else if (SolenoidToggle == true){
           DoubleSolenoid(false);
           SolenoidToggle = false;
           solToggleL = false;
           solToggleR = false;
+          wait(500, msec);
         }
       }
 
@@ -316,12 +329,12 @@ void usercontrol(void) {
          if (solToggleL == false){
           SolenoidA.set(true);
           solToggleL = true;
-          wait(100, msec);
+          wait(500, msec);
         }
         else if (solToggleL == true){
           SolenoidA.set(false);
           solToggleL = false;
-          wait(100, msec);
+          wait(500, msec);
         }
       }
 
@@ -329,12 +342,12 @@ void usercontrol(void) {
         if (solToggleR == false){
           SolenoidB.set(true);
           solToggleR = true;
-          wait(100, msec);
+          wait(500, msec);
         }
         else if (solToggleR == true){
           SolenoidB.set(false);
           solToggleR = false;
-          wait(100, msec);
+          wait(500, msec);
         }
       }
 
@@ -345,10 +358,6 @@ void usercontrol(void) {
         else if (isJoystickSwapped == true){
           isJoystickSwapped = false;
         }
-      }
-
-      if (Controller1.ButtonA.pressing()){
-        Catapult.spinTo(-540, degrees);
       }
           wait(20, msec);
                     
